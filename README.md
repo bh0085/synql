@@ -3,5 +3,5 @@ Welcome to SynQL, a crappy web frontend demonstrating the capabilities of metany
 
 
 
-==Thanks==
+##Thanks##
 Many thanks to Adam Marcus!
