@@ -1,0 +1,3 @@
+include synql/config/deployment.ini_tmpl
+recursive-include synql/public *
+recursive-include synql/templates *
