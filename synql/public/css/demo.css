@@ -91,6 +91,10 @@ body{
     overflow:hidden;
     
 }
+.title {
+    color:red;
+}
+
 .query_aliaseslist{
     color:lightgray;
 }

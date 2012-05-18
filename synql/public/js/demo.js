@@ -24,6 +24,7 @@ function init(){
 
 }
 
+/**Query types received from app. Add them to the page.*/
 function queryTypesInitialized(data){
     var title, desc, infoFun, context, gs
     /**
@@ -74,6 +75,8 @@ function queryTypesInitialized(data){
 
 }
 
+/**With a query type selected, display the list of options
+as presets or as a freebase suggestion box*/
 function queryOptsReceived(data){
     /**
        A set of query options should idefine the field of the data object,
@@ -113,6 +116,7 @@ function queryOptsReceived(data){
     return
 }
 
+/**Display Query Type options with fb suggest*/
 function makeSuggestOptions(data, group_info){
     var filter
 
@@ -134,16 +138,16 @@ function makeSuggestOptions(data, group_info){
 	    params = {'name':data.name,
 		      'data':JSON.stringify(data)}
 	    url = '/demo/'+this.group_info.runFun
-	    
+	    this.item = data;
 	    $.getJSON(url,
 		      params,
-		      function(){console.log('sent out runCommand')}
-		  );
-	    this.item = data;
-	    query_initiated(this);
-	}, context));
+		      $.proxy(queryInitiated,this)
+		     );
+		  
+	}, context))
 }
 
+/**Display Query Type options as preset links*/
 function makePresetOptions(data,group_info){
     opts = data.options
     /*Display available options for selected group.*/
@@ -167,8 +171,8 @@ function makePresetOptions(data,group_info){
 		    .text(name)
 		    .click($.proxy(function(){
 			$.post('/demo/'+this.group_info.runFun,
-			       {'name':this.item.name});
-			query_initiated(this);
+			       {'name':this.item.name},
+			       $.proxy(queryInitiated,this));
 		    }, context)))
 	    .append($('<span>').text(' - '))
 	    .append($('<span>').text(aliases.join(', '))
@@ -177,8 +181,10 @@ function makePresetOptions(data,group_info){
     }
 }
 
+/**Query is begun - add results content and launch the
+status checking Interval*/
 var status_interval;
-function query_initiated(data){
+function queryInitiated(data){
     /**
        Data describes query params and state.
 
@@ -188,6 +194,7 @@ function query_initiated(data){
        group_info:{[input to queryOptsReceived]}
        }
      */
+    context = this
     $('#content').find('.results_container').empty()
     
     rcontainer.append($('<div>').addClass('label_ur').text('Query Results'))
@@ -197,15 +204,15 @@ function query_initiated(data){
     qresults = $('<div>').addClass('query_results').prependTo(rcontainer)
 
     qresults.append($('<div>').addClass('header')
-		    .text(data.item.name))
+		    .text(context.item.name))
     qresults.append($('<div>').addClass('list').addClass('query_results_items'))
     $('.query_results_items')
 	.append($('<div>').text('...no results yet'))
     
     
     
-    context = data
-    makeProjectionOptions(data)
+    context = context
+    makeProjectionOptions(context)
     status_interval = window.setInterval(
 	$.proxy(function(){
 	    $.getJSON('/demo/checkStatus',
@@ -216,41 +223,8 @@ function query_initiated(data){
     
 }
 
-var aliasColors = null;
-function makeProjectionOptions(data){
-
-    
-    ranalysis = $('.projection_container').empty()
-    ranalysis.append($('<div>').addClass('label_ur').text('Query Projection, Summarization'))
-
-    ranalysis.append($('<div>').text('Aliases generated for query" '+ data.name+'"')) 
-
-    name = data.name
-    
-    
-    console.log('Data!', data)
-    aliases = ['barack', 'obama','potus','barry','Barack Obama'] //data.aliases
-    aliasColors = []
-    for( var i = 0 ; i <  aliases.length ; i++){
-	color=get_random_color()
-	aliasColors.push(color)
-	a = aliases[i]
-	ranalysis.append($('<span>').css('color', color).text(a))
-    }
-
-    
-}
-
-function get_random_color() {
-    var letters = '0123456789ABCDEF'.split('');
-    var color = '#';
-    for (var i = 0; i < 6; i++ ) {
-        color += letters[Math.round(Math.random() * 15)];
-    }
-    return color;
-}
-
-function query_halted(){
+/**Stops the status checker*/
+function queryHalted(){
     if (status_interval == null){
 	throw 'status interval apparently unset'
     }
@@ -260,6 +234,7 @@ function query_halted(){
     
 }
 
+/**Status checker callback*/
 function onStatusChecked(data){
     init_data = this
   
@@ -276,7 +251,7 @@ function onStatusChecked(data){
 	$('.query_status')
 	    .empty()
 	    .append($('<div>').text('done!').css('color', 'red'))
-	query_halted();
+	queryHalted();
     }else {
 	$('.query_status')
 	    .empty()
@@ -305,7 +280,46 @@ function onStatusChecked(data){
     for (var i = 0 ; i < data.tweets.length; i++){
 	$('.query_results')
 	    .append($('<div>').addClass('listitem')
-		    .text(data.tweets[i]))
+		    .append($('<span>').text(String(data.tweets[i].id))
+			    .addClass('.title'))
+		    .append($('<span>').text(data.tweets[i].text))
+		    )
     }
     
+}
+
+/**Sets up colors for results that will be projected onto the map*/
+var aliasColors = null;
+function makeProjectionOptions(data){
+
+    
+    ranalysis = $('.projection_container').empty()
+    ranalysis.append($('<div>').addClass('label_ur').text('Query Projection, Summarization'))
+
+    ranalysis.append($('<div>').text('Aliases generated for query" '+ data.name+'"')) 
+
+    name = data.name
+    
+    
+    console.log('Data!', data)
+    aliases = ['barack', 'obama','potus','barry','Barack Obama'] //data.aliases
+    aliasColors = []
+    for( var i = 0 ; i <  aliases.length ; i++){
+	color=get_random_color()
+	aliasColors.push(color)
+	a = aliases[i]
+	ranalysis.append($('<span>').css('color', color).text(a))
+    }
+
+    
+}
+
+/**Randomly colors a Query alias*/
+function get_random_color() {
+    var letters = '0123456789ABCDEF'.split('');
+    var color = '#';
+    for (var i = 0; i < 6; i++ ) {
+        color += letters[Math.round(Math.random() * 15)];
+    }
+    return color;
 }

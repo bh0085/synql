@@ -1,12 +1,30 @@
-import logging
+'''
+Demo powering the SynQL web metacritic. 
 
+/index 
+ Serves the page
+
+/getQueryTypes 
+ Yields a list of the predefined types that tweeql is expected
+ to know how to expand.
+
+/info[...]
+ Yields info for a given type, a list of options that when returned
+ allows the user to select an instance of "type" for streaming.
+
+/run[...]
+ Launches a stream with tweeql, sets up an instance of the eavesdropper
+ to report tweets.
+
+'''
+
+import logging
 from pylons import request, response, session, tmpl_context as c, url
 from pylons.controllers.util import abort, redirect
 
 from synql.lib.base import BaseController, render
-from synql.scripts import freebase_utils as fbu, tweeql_synql, ows_tools
-import synql.scripts.tweeql_econtains as tweeql_econtains
-
+from tweeql.econtains import freebase_utils as fbu
+from synql.scripts import tweeql_synql, ows_tools
 
 import json
 
@@ -54,19 +72,19 @@ class DemoController(BaseController):
 
     #Info funs
     #Displays a list of querying options for the preset run type
-    def infoBandName(self):
-        '''
-        This simply returns a preset list of  bands and the aliases 
-        that they will run with in tweeql.
-        
-        Note that this returns an empty list: the intended use of the 
-        band-names presets right now is to select a band name from
-        the freebase/jquery autocomplete.
+    #If no list is available, returns an dict having and empty array, options.
 
-        '''
-        
+    #Generic types.
+    def infoEcontainsType(self,type):
         return json.dumps({'options':[]})
-
+    def infoBandName(self):
+        return self.infoEcontainsType('band');
+    def infoPersonName(self):
+        return self.infoEcontainsType('person')
+    def infoFoodName(self):
+        return self.infoEcontainsType('food')
+    
+    #Predefined type.
     def infoBandCollectionName(self):
         '''
         Similar to the above, agglomerates aliases from band 
@@ -78,121 +96,43 @@ class DemoController(BaseController):
         name:[string] -- the band collection name to run an econtains query for.
         }
         '''
-
         p = request.params
-        allowed= fbu.allowedBandCollectionNames()
-        
+        allowed= fbu.allowedBandCollectionNames()        
         data = {}
         data['options'] = []
         for name in allowed:
             aliases = fbu.getBandCollectionAliases(list = name)
             data['options'].append({'name':name,
                                     'aliases':aliases})
-
-            
         return json.dumps(data)
-
-    def infoPersonName(self):
-        '''
-        ... Same as infoBandName
-        '''
-        return json.dumps({'options':[]})
-
-    def infoFoodName(self):
-        '''
-        ... Same as info BandName
-        '''
-        raise Exception()
 
     #Runners...
     #These take a user's selection of band name, collection etc
-    def runBandName(self):
-        '''
-        Given a band name, call tweeql with ECONTAINS band:{name}. 
 
-        Tweeql will call freebase_utils to grab the list of aliases for name
-        in the same fashion as infoBandName does.
-        '''
-
-        p = request.params
-        name = p['name']
-        econtains = 'band:{0}'.format(name)
-        written = tweeql_econtains.setAliasesIfNeeded(econtains,data = json.loads(p['data']), reset = True) 
-
-        state = tweeql_synql.launchECONTAINS(econtains)
-        out = {
-            'params':{
-                'name':name,
-                'aliases':written['aliases']
-                },
-            'written':written,
-            'state':state
-            }
-        return json.dumps(out)
+    #Generic types. (everything!)
     def runBandCollectionName(self):
-        '''
-        ... Same as the above with ECONTAINS bandcollection:{name}.
-        '''
-
-        p = request.params
-        #expected aliases is not required, just allows us to 
-        #funnel data forward.
-        expected_aliases = p.get('aliases', [])
-        name = p['name']
-        state = tweeql_synql.launchECONTAINS('bandcollection:{0}'.format(name))
-        
-        out = {
-            'params':{
-                'name':name,
-                'aliases':expected_aliases,
-                },
-            'state':state
-            }
-        return json.dumps(out)
-
+        return self.runEcontainsType('bandcollection', request.params['name'])
     def runPersonName(self):
-        '''
-        ... Same as the above with ECONTAINS person:{name}.
-        '''
+        return self.runEcontainsType('person',request.params['name'])
+    def runBandName(self):
+        return self.runEcontainsType('band',request.params['name'])
+    def runFoodGenre(self):
+        return self.runEcontainsType('food',request.params['name'])
+    def runEcontainsType(self,type,key):
         p = request.params
         name = p['name']
-        econtains = 'person:{0}'.format(name)
-        written = tweeql_econtains.setAliasesIfNeeded(econtains,data = json.loads(p['data']),reset = True)         
+        econtains = '{0}:{1}'.format(type,key)
         state = tweeql_synql.launchECONTAINS(econtains)
         out = {
             'params':{
-                'name':name,
-                'aliases':written['aliases']
+                'name':name
                 },
-            'written':written,
             'state':state
             }
         return json.dumps(out)
-
-
-    def runFoodGenre(self):
-        '''
-        ... Same as the above with ECONTAINS food:{name}.
-        '''
-
-        p = request.params
-        #expected aliases is not required, just allows us to
-        #funnel data forward.
-        expected_aliases = p.get('aliases', [])
-        name = p['name']
-        state = tweeql_synql.launchECONTAINS('food:{0}'.format(name))
-    
-        out = {
-            'params':{
-                'name':name,
-                'aliases':expected_aliases,
-                },
-            'tweeql_state':state
-            }
-        return json.dumps(out)
+        
 
     def checkStatus(self):
         last_state = request.params.get('tweeql_state')
-        info = tweeql_synql.queryECONTAINS()#last_state = last_state)
-
+        info = tweeql_synql.queryECONTAINS()
         return json.dumps(info)
