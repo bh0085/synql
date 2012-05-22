@@ -296,7 +296,7 @@ function makeProjectionOptions(data){
     ranalysis = $('.projection_container').empty()
     ranalysis.append($('<div>').addClass('label_ur').text('Query Projection, Summarization'))
 
-    ranalysis.append($('<div>').text('Aliases generated for query" '+ data.name+'"')) 
+    ranalysis.append($('<div>').text('Aliases generated for query" '+ data.item.name+'"')) 
 
     name = data.name
     
