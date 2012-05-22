@@ -302,7 +302,7 @@ function makeProjectionOptions(data){
     
     
     console.log('Data!', data)
-    aliases = []
+    aliases = [data.item.name]
     aliasColors = []
     for( var i = 0 ; i <  aliases.length ; i++){
 	color=get_random_color()
