@@ -302,7 +302,7 @@ function makeProjectionOptions(data){
     
     
     console.log('Data!', data)
-    aliases = ['barack', 'obama','potus','barry','Barack Obama'] //data.aliases
+    aliases = []
     aliasColors = []
     for( var i = 0 ; i <  aliases.length ; i++){
 	color=get_random_color()
