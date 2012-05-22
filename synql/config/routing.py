@@ -24,6 +24,9 @@ def make_map(config):
 
     map.connect('/synql',controller = 'demo', action='index')
     map.connect('/synql/{action}',controller = 'demo')
+    
+    map.connect('/goodmorning_world', controller = 'goodmorning')
+    map.connect('/goodmorning_world/{action}', controller = 'goodmorning')
 
     map.connect('/{controller}', action = 'index')
     map.connect('/{controller}/{action}')
