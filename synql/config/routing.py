@@ -21,6 +21,10 @@ def make_map(config):
     # CUSTOM ROUTES HERE
 
     map.connect('/', controller = 'demo', action ='index')
+
+    map.connect('/synql',controller = 'demo', action='index')
+    map.connect('/synql/{action}',controller = 'demo')
+
     map.connect('/{controller}', action = 'index')
     map.connect('/{controller}/{action}')
     map.connect('/{controller}/{action}/{id}')
