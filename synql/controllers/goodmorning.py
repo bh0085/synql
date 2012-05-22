@@ -13,4 +13,4 @@ class GoodmorningController(BaseController):
         # Return a rendered template
         #return render('/goodmorning.mako')
         # or, return a string
-        return 'Hello World'
+        return render('goodmorning.mako')

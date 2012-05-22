@@ -12,7 +12,8 @@
 
 <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
 <meta http-equiv="content-type" content="text/html; charset=UTF-8"/>
-<title>Google Maps JavaScript API v3 Example: KmlLayer KML</title>
+
+<title>SynQL Web Server for Launching Entity-Resolved ECONTAINS Queries.</title>
 <script type="text/javascript" src="http://maps.google.com/maps/api/js?sensor=false"></script>
 
 
