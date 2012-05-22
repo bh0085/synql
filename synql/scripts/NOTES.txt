@@ -1,0 +1,4 @@
+Using Topsy Otter API to retrieve historical tweets.
+
+email: bh0085@gmail.com	
+pass: dinobot
